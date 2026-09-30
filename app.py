@@ -1,21 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-Controle de Notas Fiscais - Interface gráfica (Tkinter)
-
-- Cadastro de nota a partir de PDF ou XML de NF-e (um a um ou vários XML de
-  uma vez), com tela de confirmação editável
-- Empresa emitente identificada automaticamente (FORMATEC, SHIKI, TOTALFS) e
-  arquivos guardados em pastas por tipo e por empresa (ver organizacao.py)
-- Tipo de entrega: CARRO PROPRIO (nota + canhoto) ou TRANSPORTADORA (nota +
-  canhoto do motorista + CTE + comprovante de entrega do cliente)
-- Status: EMITIDA, EM ROTA, CONCLUIDA (exige canhoto), CANCELADA
-- Pesquisa aproximada em tempo real, filtros por status e empresa
-- Pendências: notas em EMITIDA há mais de 3 dias, com alerta ao abrir
-
-Cores: todas ficam no dicionário CORES logo abaixo.
-"""
 import os
-import subprocess
 import sys
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
@@ -30,11 +13,6 @@ import xml_utils
 
 APP_TITLE = "Controle de Notas Fiscais"
 
-# ---------------------------------------------------------------------------
-# CORES DO PROGRAMA — altere os códigos hexadecimais abaixo para mudar o
-# visual. Todos os widgets usam essas chaves, então trocar um valor aqui já
-# reflete no programa inteiro.
-# ---------------------------------------------------------------------------
 CORES = {
     "fundo_janela": "#c9c400",        # fundo geral da janela e dos painéis
     "fundo_lista": "#736e00",         # moldura em volta da lista principal
@@ -62,32 +40,20 @@ def rotulo_anexo(categoria, tipo_entrega):
     return {"cte": "CTE (PDF ou XML)",
             "comprovante": "Comprovante de entrega assinado pelo cliente (PDF ou XML)"}[categoria]
 
-
+# Função que deixa os botões de anexo visiveis de acordo com o tipo de entrega
 def categorias_visiveis(tipo_entrega):
-    """Canhoto sempre; CTE e comprovante só quando a entrega é por transportadora."""
     if tipo_entrega == storage.ENTREGA_TRANSPORTADORA:
         return ["canhoto", "cte", "comprovante"]
     return ["canhoto"]
 
 
 def abrir_arquivo_no_sistema(caminho, imprimir=False):
-    """Abre (ou imprime) um arquivo com o programa padrão do sistema. Impressão
-    direta só é suportada nativamente no Windows."""
     try:
-        if sys.platform.startswith("win"):
-            os.startfile(caminho, "print" if imprimir else "open")  # noqa
-        elif sys.platform == "darwin":
-            subprocess.call(["open", caminho])
-        else:
-            subprocess.call(["xdg-open", caminho])
+        os.startfile(caminho, "print" if imprimir else "open") 
     except Exception as e:
         messagebox.showerror("Erro ao abrir arquivo", str(e))
 
-
-# ============================================================================
 class DialogoNovaNota(tk.Toplevel):
-    """Confirmação dos dados lidos, tipo de entrega automático e anexos."""
-
     def __init__(self, master, origem, campos_iniciais, titulo_extra=None):
         super().__init__(master)
         titulo = "Confirmar dados da Nota Fiscal"
