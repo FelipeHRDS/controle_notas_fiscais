@@ -1,13 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Extração de campos de PDFs de Nota Fiscal (DANFE) usando pdfplumber + regex.
-
-IMPORTANTE: o layout de DANFEs varia bastante entre emissores e sistemas de
-origem (ERP). As expressões abaixo cobrem os padrões mais comuns de DANFE em
-português, mas a extração é "melhor esforço": o programa sempre mostra uma
-tela de confirmação com os campos editáveis antes de salvar a nota, para que
-o operador corrija qualquer campo que não tenha sido lido corretamente.
-"""
 import re
 import pdfplumber
 
@@ -21,8 +11,6 @@ def extrair_texto(caminho_pdf):
                 if t:
                     texto += t + "\n"
     except Exception:
-        # PDF pode ser uma imagem escaneada sem texto, corrompido, etc.
-        # Nesse caso devolvemos texto vazio e o operador preenche manualmente.
         pass
     return texto
 
@@ -36,31 +24,6 @@ def _buscar(padroes, texto, grupo=1):
             return valor
     return ""
 
-
-# ---------------------------------------------------------------------------
-# Padrões específicos do modelo de DANFE usado (ex.: notas da FORMATEC).
-#
-# Nesse modelo, quando o pdfplumber extrai o texto, os RÓTULOS dos campos
-# (ex.: "NOME/RAZÃO SOCIAL", "DATA DA EMISSÃO") não saem no texto — só os
-# valores, "achatados" em linhas. Por isso a extração aqui não procura por
-# rótulo, e sim pelo FORMATO/POSIÇÃO de cada valor dentro da linha:
-#
-#   1) Linha do Destinatário (cliente):
-#      "<NOME DO CLIENTE> <CNPJ do cliente> <DATA DE EMISSÃO>"
-#      ex.: "BORRACHAS VIPAL S.A. 87.870.952/0014-69 17/09/2026"
-#      -> cliente = "BORRACHAS VIPAL S.A.", emissão = "17/09/2026"
-#
-#   2) Linha da Transportadora:
-#      "<NOME DA TRANSPORTADORA> [Destinatário|Remetente] <CNPJ>" (sem data
-#      depois do CNPJ, ao contrário da linha do cliente)
-#      ex.: "COTRAIBI COOP DOS TRANSPORTADORES Destinatário 07.441.985/0003-00"
-#      -> transportadora = "COTRAIBI COOP DOS TRANSPORTADORES"
-#
-#   3) Número da nota: sempre no formato "Nº. 000.061.135"
-#
-#   4) Código do cliente: sempre em "Cliente: 88298-5" (Dados Adicionais)
-# ---------------------------------------------------------------------------
-
 _RE_CNPJ = r"\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2}"
 
 _PADRAO_CLIENTE_EMISSAO = re.compile(
@@ -72,8 +35,6 @@ _PADRAO_TRANSPORTADORA = re.compile(
 
 
 def _extrair_por_layout_danfe(texto):
-    """Extração dedicada ao layout descrito acima. Devolve um dict; campos
-    não encontrados ficam como string vazia."""
     cliente = emissao = transportadora = ""
     for linha in texto.splitlines():
         linha = linha.strip()
@@ -95,8 +56,6 @@ def _extrair_por_layout_danfe(texto):
     numero_nota = _buscar([r"N[ºO°o]\.?\s*(\d{3}\.\d{3}\.\d{3})"], texto)
     codigo_cliente = _buscar([r"Cliente:\s*([\w\-/]+)"], texto)
 
-    # Empresa emitente: todo DANFE começa com o texto do canhoto
-    # "RECEBEMOS DE <EMPRESA> OS PRODUTOS CONSTANTES DA NOTA FISCAL..."
     empresa_razao = _buscar([r"RECEBEMOS\s+DE\s+(.+?)\s+OS\s+PRODUTOS"], texto)
 
     return {
@@ -108,10 +67,6 @@ def _extrair_por_layout_danfe(texto):
         "empresa_razao": empresa_razao,
     }
 
-
-# Padrões genéricos (fallback), usados só nos campos que a extração acima
-# não conseguir preencher — útil caso apareça, um dia, uma nota de outro
-# layout em que os rótulos aparecem normalmente no texto extraído.
 def _extrair_generico(texto):
     numero_nota = _buscar([
         r"N[ºO°o]\.?\s*(?:DA\s*)?(?:NF-?E?)?\s*[:\-]?\s*(\d{2,3}\.?\d{3}\.?\d{3})",

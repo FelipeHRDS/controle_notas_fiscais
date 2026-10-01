@@ -29,7 +29,6 @@ FILTRO_CTE_COMPROVANTE = [("PDF ou XML", "*.pdf *.xml"), ("PDF", "*.pdf"), ("XML
 FILTRO_CANHOTO = [("Foto ou PDF", "*.pdf *.png *.jpg *.jpeg *.heic *.webp"), ("Todos os arquivos", "*.*")]
 FILTROS_ANEXO = {"canhoto": FILTRO_CANHOTO, "cte": FILTRO_CTE_COMPROVANTE, "comprovante": FILTRO_CTE_COMPROVANTE}
 
-
 def rotulo_anexo(categoria, tipo_entrega):
     if categoria == "canhoto":
         if tipo_entrega == storage.ENTREGA_TRANSPORTADORA:
@@ -73,7 +72,6 @@ class DialogoNovaNota(tk.Toplevel):
             fg=CORES["texto_secundario"],
         ).pack(padx=12, pady=(2, 6), anchor="w")
 
-        # ---- campos
         campos = tk.Frame(self)
         campos.pack(padx=12, fill="x")
         self.vars = {}
@@ -101,13 +99,11 @@ class DialogoNovaNota(tk.Toplevel):
             tk.Label(campos, text=f"(emitente: {razao})", fg=CORES["texto_secundario"]).grid(
                 row=len(rotulos) + 1, column=1, sticky="w")
 
-        # ---- tipo de entrega identificado pelo nome da transportadora
         entrega = tk.LabelFrame(self, text="Tipo de entrega")
         entrega.pack(padx=12, pady=(10, 4), fill="x")
         self.tipo_var = tk.StringVar()
         tk.Label(entrega, textvariable=self.tipo_var).pack(anchor="w", padx=12, pady=6)
 
-        # ---- anexos (as linhas mudam conforme o tipo de entrega)
         self.anexos_frame = tk.LabelFrame(self, text="Anexos (opcionais — também dá para anexar depois)")
         self.anexos_frame.pack(padx=12, pady=4, fill="x")
         self.aviso_tipo = tk.Label(
@@ -124,7 +120,6 @@ class DialogoNovaNota(tk.Toplevel):
         self.vars["transportadora"].trace_add("write", lambda *_: self._atualizar_anexos())
         self._atualizar_anexos()
 
-        # ---- botões
         botoes = tk.Frame(self)
         botoes.pack(pady=12)
         tk.Button(botoes, text="Cancelar", width=12, command=self._cancelar).pack(side="left", padx=6)
@@ -140,7 +135,7 @@ class DialogoNovaNota(tk.Toplevel):
         for categoria, (linha, rot_var, nome_var) in self.linhas.items():
             linha.pack_forget()
             if categoria not in visiveis:
-                self.anexos[categoria] = None        # some da tela -> descarta a seleção
+                self.anexos[categoria] = None   
                 nome_var.set("nenhum arquivo")
         if not visiveis:
             self.aviso_tipo.configure(text="Informe 'O PROPRIO' ou o nome da transportadora para ver os anexos.")
@@ -185,8 +180,6 @@ class DialogoNovaNota(tk.Toplevel):
         self.resultado = None
         self.destroy()
 
-
-# ============================================================================
 class DialogoDetalhesNota(tk.Toplevel):
     """Detalhes de uma nota: abrir/baixar/imprimir, anexos e status."""
 
@@ -261,7 +254,6 @@ class DialogoDetalhesNota(tk.Toplevel):
         tk.Button(status_frame, text="Excluir nota e arquivos", command=self._excluir,
                   fg=CORES["alerta"]).pack(side="right", padx=6, pady=8)
 
-    # ---- ações
     def _recarregar(self):
         atual = storage.obter_nota(self.base, self.nota["id"])
         if atual:
@@ -392,8 +384,6 @@ class DialogoDetalhesNota(tk.Toplevel):
         self.app.atualizar_lista()
         self.destroy()
 
-
-# ============================================================================
 class DialogoAlertaPendencias(tk.Toplevel):
     """Alerta ao abrir o programa: notas em 'EMITIDA' há mais de 3 dias."""
 
@@ -440,8 +430,6 @@ class DialogoAlertaPendencias(tk.Toplevel):
         self.app.atualizar_lista()
         self.destroy()
 
-
-# ============================================================================
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
@@ -468,7 +456,6 @@ class App(tk.Tk):
         topo = tk.Frame(self, bg=fundo)
         topo.pack(fill="x", padx=16, pady=(14, 6))
         tk.Label(topo, text=APP_TITLE, bg=fundo, font=("TkDefaultFont", 14, "bold")).pack(side="left")
-        # tk.Button(topo, text="Configurar diretório", command=self.escolher_diretorio).pack(side="right")
 
         busca = tk.Frame(self, bg=fundo)
         busca.pack(fill="x", padx=16, pady=6)
@@ -495,7 +482,6 @@ class App(tk.Tk):
         self.ordenacao_var = tk.StringVar(value="Mais recentes")
         combo(6, "Ordenar:", self.ordenacao_var, ["Mais recentes", "Mais antigas"], 13)
 
-        # ---- lista principal
         colunas = ("numero", "empresa", "cliente", "codigo", "emissao", "transportadora", "status")
         titulos = {"numero": "Nº da NF", "empresa": "Empresa", "cliente": "Cliente", "codigo": "Código Cliente",
                    "emissao": "Emissão", "transportadora": "Transportadora", "status": "Status"}
@@ -514,7 +500,6 @@ class App(tk.Tk):
         self.tree.configure(yscrollcommand=scroll.set)
         scroll.pack(side="right", fill="y")
 
-        # ---- rodapé
         rodape = tk.Frame(self, bg=fundo)
         rodape.pack(fill="x", padx=16, pady=(6, 16))
 
@@ -536,7 +521,6 @@ class App(tk.Tk):
         tk.Button(add, text="+ Importar vários XML", width=24, height=2, bg=CORES["destaque"],
                   fg=CORES["texto_sobre_destaque"], command=self.importar_varios_xml).pack(padx=10, pady=(4, 10))
 
-    # ---------------------------------------------------------------- diretório
     def escolher_diretorio(self, primeira_vez=False):
         if primeira_vez:
             messagebox.showinfo(
@@ -554,7 +538,6 @@ class App(tk.Tk):
         elif primeira_vez:
             messagebox.showwarning("Diretório necessário", "É necessário escolher um diretório para o programa funcionar.")
 
-    # ---------------------------------------------------------------- listagem
     def _limpar_busca(self):
         self.busca_var.set("")
         self.atualizar_lista()
@@ -607,7 +590,6 @@ class App(tk.Tk):
         if nota:
             DialogoDetalhesNota(self, self, nota)
 
-    # ---------------------------------------------------------------- cadastro
     def _diretorio_ok(self):
         if not self.diretorio or not os.path.isdir(self.diretorio):
             messagebox.showwarning("Diretório indisponível",

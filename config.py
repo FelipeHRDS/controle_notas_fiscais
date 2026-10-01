@@ -1,12 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Configurações do Controle de Notas Fiscais.
-
-Guarda o caminho do diretório principal (onde ficam os PDFs das notas, os
-canhotos e o índice de dados) em um arquivo local na máquina do usuário.
-Isso permite trocar facilmente o caminho quando o sistema for migrado para
-um diretório de servidor/rede compartilhada.
-"""
 import json
 import os
 

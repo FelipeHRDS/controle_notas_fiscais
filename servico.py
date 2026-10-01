@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-"""Cadastro e anexos; o índice compartilhado é controlado por storage."""
 import os
 import shutil
 import ntpath
@@ -93,10 +91,7 @@ def anexar_arquivo(base, nota, categoria, origem):
         raise
     return relativo
 
-
-# Uma exclusão envolve arquivos e índice; mantenha a trava durante toda a operação.
 CAMPOS_ARQUIVO = ('arquivo', *storage.CAMPOS_ANEXO.values())
-
 
 def excluir_nota(base, nota_id, numero_esperado, empresa_esperada):
     """Exclui a nota e os arquivos associados; devolve caminhos cuja limpeza falhou."""
@@ -114,7 +109,6 @@ def excluir_nota(base, nota_id, numero_esperado, empresa_esperada):
             relativo = nota.get(campo)
             if not relativo:
                 continue
-            # Dados antigos podem conter caminhos inválidos: nunca exclua fora da pasta base.
             if os.path.isabs(relativo) or ntpath.splitdrive(relativo)[0]:
                 raise ValueError(f'Caminho inválido no campo {campo}: {relativo}')
             caminho_original = organizacao.caminho_absoluto(base, relativo)

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-"""Leitura dos campos de uma NF-e XML (nfeProc ou NFe, com ou sem namespace)."""
 import re
 import xml.etree.ElementTree as ET
 from datetime import datetime
@@ -39,7 +37,6 @@ def eh_xml_nfe(caminho):
 
 
 def extrair_campos_xml(caminho):
-    """Código interno do cliente não é campo obrigatório da NF-e; fica vazio se ausente."""
     inf = _ler_nfe(caminho)
     ide, dest, emit, transp = (_filho(inf, nome) for nome in ('ide', 'dest', 'emit', 'transp'))
     emissao = _texto(ide, 'dhEmi') or _texto(ide, 'dEmi')

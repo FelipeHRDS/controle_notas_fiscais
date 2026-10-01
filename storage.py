@@ -1,15 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Camada de persistência: mantém o índice das notas fiscais em um arquivo
-notas_fiscais.json dentro do diretório base.
-
-Como o diretório fica em uma pasta compartilhada (vários operadores ao mesmo
-tempo), toda alteração é feita com:
-  - um arquivo de trava (notas_fiscais.lock), para um operador esperar o outro
-    terminar de gravar;
-  - gravação "atômica" (escreve em arquivo temporário e troca), para o índice
-    nunca ficar pela metade.
-"""
 import json
 import os
 import re
@@ -40,7 +28,6 @@ def identificar_tipo_entrega(nome_transportadora):
         return ""
     return ENTREGA_CARRO_PROPRIO if nome == "oproprio" else ENTREGA_TRANSPORTADORA
 
-# categoria de anexo -> campo no índice
 CAMPOS_ANEXO = {
     "canhoto": "canhoto_arquivo",
     "cte": "cte_arquivo",
@@ -49,8 +36,6 @@ CAMPOS_ANEXO = {
 
 DIAS_LIMITE_PENDENCIA = 3
 
-
-# ------------------------------------------------------------ leitura/gravação
 def _index_path(diretorio):
     return os.path.join(diretorio, INDEX_FILENAME)
 
@@ -88,7 +73,7 @@ def _bloqueio(diretorio, timeout=10.0, obsoleto=30.0):
             os.close(os.open(caminho, os.O_CREAT | os.O_EXCL | os.O_WRONLY))
             break
         except FileExistsError:
-            try:  # trava esquecida (programa fechado no meio) -> remove
+            try:  
                 if time.time() - os.path.getmtime(caminho) > obsoleto:
                     os.remove(caminho)
                     continue
@@ -117,21 +102,20 @@ def _modificar(diretorio, funcao):
     return resultado
 
 
-# ---------------------------------------------------------------- operações
 def nova_nota(arquivo, cliente, codigo_cliente, emissao, numero_nota, transportadora,
               empresa="", empresa_razao="", tipo_entrega="",
               canhoto_arquivo=None, cte_arquivo=None, comprovante_arquivo=None):
     return {
         "id": str(uuid.uuid4()),
-        "arquivo": arquivo,                      # caminho relativo ao diretório base
+        "arquivo": arquivo,                      
         "cliente": cliente,
         "codigo_cliente": codigo_cliente,
         "emissao": emissao,
         "numero_nota": numero_nota,
         "transportadora": transportadora,
-        "empresa": empresa,                      # nome da pasta (FORMATEC, SHIKI...)
-        "empresa_razao": empresa_razao,          # razão social do emitente
-        "tipo_entrega": tipo_entrega,            # CARRO PROPRIO | TRANSPORTADORA
+        "empresa": empresa,                      
+        "empresa_razao": empresa_razao,          
+        "tipo_entrega": tipo_entrega,            
         "status": STATUS_EMITIDA,
         "data_status_emitida": date.today().isoformat(),
         "data_adicao": datetime.now().isoformat(timespec="seconds"),
@@ -176,7 +160,6 @@ def alterar_status(diretorio, nota_id, novo_status):
             if n["id"] == nota_id:
                 n["status"] = novo_status
                 if novo_status == STATUS_EMITIDA:
-                    # reinicia a contagem de dias parada em "EMITIDA"
                     n["data_status_emitida"] = date.today().isoformat()
                     n["alerta_dispensado"] = False
                 break
@@ -186,8 +169,6 @@ def alterar_status(diretorio, nota_id, novo_status):
 def marcar_alerta_dispensado(diretorio, nota_id):
     atualizar_nota(diretorio, nota_id, alerta_dispensado=True)
 
-
-# ---------------------------------------------------------------- pendências
 def dias_em_emitida(nota):
     if nota.get("status") != STATUS_EMITIDA:
         return 0
@@ -205,8 +186,6 @@ def esta_pendente(nota):
 def notas_pendentes(notas):
     return [n for n in notas if esta_pendente(n)]
 
-
-# ------------------------------------------------------- ordenação e busca
 def data_para_ordenacao(nota):
     """Data usada para ordenar por 'mais recente': a emissão (dd/mm/aaaa);
     se inválida, a data em que a nota foi adicionada ao sistema."""
@@ -240,7 +219,6 @@ def nota_combina_com_busca(nota, termo):
 
     for palavra in palavras:
         if palavra.isdigit():
-            # 000.061.135 e 61135 referem-se ao mesmo número.
             numero = palavra.lstrip("0") or "0"
             if not any(numero in (valor.lstrip("0") or "0") for valor in valores_numero if valor):
                 return False
